@@ -1,0 +1,16 @@
+gl_texturemode
+gl_texturemode 2
+fov 100
+developer
+developer 1
+map start
+noclip
+restart
+map start
+noclip
+developer 1
+map start
+impulse 9
+map e1m1
+impulse 9
+map e1m1

@@ -1078,26 +1078,26 @@ void ED_LoadFromFile (const char *data)
 
 	// look for the spawn function
 		//
-		func = ED_FindFunction (va("spawnfunc_%s", PR_GetString(ent->v.classname)));
-		if (func)
-		{
-			if (!usingspawnfunc++)
-				Con_DPrintf2 ("Using DP_SV_SPAWNFUNC_PREFIX\n");
-		}
-		else
-			func = ED_FindFunction ( PR_GetString(ent->v.classname) );
+        func = ED_FindFunction(va("spawnfunc_%s", PR_GetString(ent->v.classname)));
+        if (func)
+        {
+            if (!usingspawnfunc++)
+                Con_DPrintf2("Using DP_SV_SPAWNFUNC_PREFIX\n");
+        }
+        else
+            func = ED_FindFunction(PR_GetString(ent->v.classname));
 
 		if (!func)
 		{
-			const char *classname = PR_GetString(ent->v.classname);
-			if (!strcmp(classname, "misc_model"))
-				PR_spawnfunc_misc_model(ent);
-			else
-			{
-				Con_SafePrintf ("No spawn function for:\n"); //johnfitz -- was Con_Printf
-				ED_Print (ent);
-				ED_Free (ent);
-			}
+            const char* classname = PR_GetString(ent->v.classname);
+            if (!strcmp(classname, "misc_model"))
+                PR_spawnfunc_misc_model(ent);
+            else
+            {
+                Con_SafePrintf("No spawn function for:\n"); //johnfitz -- was Con_Printf
+                ED_Print(ent);
+                ED_Free(ent);
+            }
 			continue;
 		}
 
@@ -1257,6 +1257,7 @@ qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcr
 		qcvm->globaldefs[i].type = LittleShort (qcvm->globaldefs[i].type);
 		qcvm->globaldefs[i].ofs = LittleShort (qcvm->globaldefs[i].ofs);
 		qcvm->globaldefs[i].s_name = LittleLong (qcvm->globaldefs[i].s_name);
+        //Con_Printf("globaldefs: %s - %d %d\n", qcvm->strings + qcvm->globaldefs[i].s_name, qcvm->globaldefs[i].type, qcvm->globaldefs[i].ofs);
 	}
 
 	for (u = 0; u < sizeof(qcvm->extfields)/sizeof(int); u++)
@@ -1270,6 +1271,14 @@ qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcr
 		qcvm->fielddefs[i].ofs = LittleShort (qcvm->fielddefs[i].ofs);
 		qcvm->fielddefs[i].s_name = LittleLong (qcvm->fielddefs[i].s_name);
 	}
+
+    FILE* fdf = fopen("fielddefs_progs.txt", "w");
+    for (i = 0; i < qcvm->progs->numfielddefs; i++)
+    {
+        Con_Printf("fielddefs: %s - %d %d\n", qcvm->strings + qcvm->fielddefs[i].s_name, qcvm->fielddefs[i].type, qcvm->fielddefs[i].ofs);
+        fprintf(fdf, "fielddefs: %s - %d %d\n", qcvm->strings + qcvm->fielddefs[i].s_name, qcvm->fielddefs[i].type, qcvm->fielddefs[i].ofs);
+    }
+    fclose(fdf);
 
 	for (i = 0; i < qcvm->progs->numglobals; i++)
 		((int *)qcvm->globals)[i] = LittleLong (((int *)qcvm->globals)[i]);
@@ -1305,6 +1314,384 @@ qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcr
 	return true;
 }
 
+qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int needcrc, builtin_t* builtins, size_t numbuiltins)
+{
+    int			i;
+    unsigned int u;
+
+    qcvm_t temp_vm = { 0 };
+    qcvm_t* old_qcvm = qcvm;
+
+    qcvm = &temp_vm;
+
+    PR_ClearProgs(qcvm);
+
+	temp_vm.progs = (dprograms_t *)COM_LoadMallocFile(filename, NULL);
+    if (!temp_vm.progs) {
+        qcvm = old_qcvm;
+        return false;
+    }
+
+    qcvm->progssize = com_filesize;
+    CRC_Init(&qcvm->progscrc);
+    for (i = 0; i < com_filesize; i++)
+        CRC_ProcessByte(&qcvm->progscrc, ((byte*)qcvm->progs)[i]);
+    qcvm->progshash = Com_BlockChecksum(qcvm->progs, com_filesize);
+
+    // byte swap the header
+    for (i = 0; i < (int) sizeof(*qcvm->progs) / 4; i++)
+        ((int*)qcvm->progs)[i] = LittleLong(((int*)qcvm->progs)[i]);
+
+    if (qcvm->progs->version != PROG_VERSION)
+    {
+        if (false)
+            Host_Error("%s has wrong version number (%i should be %i)", filename, qcvm->progs->version, PROG_VERSION);
+        else
+        {
+            Con_Printf("%s ABI set not supported\n", filename);
+            free(qcvm->progs);
+            qcvm->progs = NULL;
+            qcvm = old_qcvm;
+            return false;
+        }
+    }
+    if (false && qcvm->progs->crc != needcrc)
+    {
+        if (fatal)
+            Host_Error("%s system vars have been modified, progdefs.h is out of date", filename);
+        else
+        {
+            switch (qcvm->progs->crc)
+            {
+            case 22390:	//full csqc
+                Con_Printf("%s - full csqc is not supported\n", filename);
+                break;
+            case 52195:	//dp csqc
+                Con_Printf("%s - obsolete csqc is not supported\n", filename);
+                break;
+            case 54730:	//quakeworld
+                Con_Printf("%s - quakeworld gamecode is not supported\n", filename);
+                break;
+            case 26940:	//prerelease
+                Con_Printf("%s - prerelease gamecode is not supported\n", filename);
+                break;
+            case 32401:	//tenebrae
+                Con_Printf("%s - tenebrae gamecode is not supported\n", filename);
+                break;
+            case 38488:	//hexen2 release
+            case 26905:	//hexen2 mission pack
+            case 14046: //hexen2 demo
+                Con_Printf("%s - hexen2 gamecode is not supported\n", filename);
+                break;
+                //case 5927: //nq PROGHEADER_CRC as above. shouldn't happen, obviously.
+            default:
+                Con_Printf("%s system vars are not supported\n", filename);
+                break;
+            }
+            free(qcvm->progs);
+            qcvm->progs = NULL;
+            qcvm = old_qcvm;
+            return false;
+        }
+    }
+    Con_DPrintf("%s occupies %iK.\n", filename, com_filesize / 1024);
+
+    qcvm->functions = (dfunction_t*)((byte*)qcvm->progs + qcvm->progs->ofs_functions);
+    qcvm->strings = (char*)qcvm->progs + qcvm->progs->ofs_strings;
+    if (qcvm->progs->ofs_strings + qcvm->progs->numstrings >= com_filesize)
+        Host_Error("%s strings go past end of file\n", filename);
+
+    qcvm->globaldefs = (ddef_t*)((byte*)qcvm->progs + qcvm->progs->ofs_globaldefs);
+    qcvm->fielddefs = (ddef_t*)((byte*)qcvm->progs + qcvm->progs->ofs_fielddefs);
+    qcvm->statements = (dstatement_t*)((byte*)qcvm->progs + qcvm->progs->ofs_statements);
+
+    qcvm->globals = (float*)((byte*)qcvm->progs + qcvm->progs->ofs_globals);
+    //pr_global_struct = (globalvars_t*)qcvm->globals;
+
+    qcvm->stringssize = qcvm->progs->numstrings;
+
+    // byte swap the lumps
+    for (i = 0; i < qcvm->progs->numstatements; i++)
+    {
+        qcvm->statements[i].op = LittleShort(qcvm->statements[i].op);
+        qcvm->statements[i].a = LittleShort(qcvm->statements[i].a);
+        qcvm->statements[i].b = LittleShort(qcvm->statements[i].b);
+        qcvm->statements[i].c = LittleShort(qcvm->statements[i].c);
+    }
+
+    for (i = 0; i < qcvm->progs->numfunctions; i++)
+    {
+        qcvm->functions[i].first_statement = LittleLong(qcvm->functions[i].first_statement);
+        qcvm->functions[i].parm_start = LittleLong(qcvm->functions[i].parm_start);
+        qcvm->functions[i].s_name = LittleLong(qcvm->functions[i].s_name);
+        qcvm->functions[i].s_file = LittleLong(qcvm->functions[i].s_file);
+        qcvm->functions[i].numparms = LittleLong(qcvm->functions[i].numparms);
+        qcvm->functions[i].locals = LittleLong(qcvm->functions[i].locals);
+    }
+
+    for (i = 0; i < qcvm->progs->numglobaldefs; i++)
+    {
+        qcvm->globaldefs[i].type = LittleShort(qcvm->globaldefs[i].type);
+        qcvm->globaldefs[i].ofs = LittleShort(qcvm->globaldefs[i].ofs);
+        qcvm->globaldefs[i].s_name = LittleLong(qcvm->globaldefs[i].s_name);
+    }
+
+    for (u = 0; u < sizeof(qcvm->extfields) / sizeof(int); u++)
+        ((int*)&qcvm->extfields)[u] = -1;
+
+    for (i = 0; i < qcvm->progs->numfielddefs; i++)
+    {
+        qcvm->fielddefs[i].type = LittleShort(qcvm->fielddefs[i].type);
+        if (qcvm->fielddefs[i].type & DEF_SAVEGLOBAL)
+            Host_Error("PR_LoadProgs: pr_fielddefs[i].type & DEF_SAVEGLOBAL");
+        qcvm->fielddefs[i].ofs = LittleShort(qcvm->fielddefs[i].ofs);
+        qcvm->fielddefs[i].s_name = LittleLong(qcvm->fielddefs[i].s_name);
+    }
+
+    for (i = 0; i < qcvm->progs->numglobals; i++)
+        ((int*)qcvm->globals)[i] = LittleLong(((int*)qcvm->globals)[i]);
+    
+    memcpy(qcvm->builtins, builtins, numbuiltins * sizeof(qcvm->builtins[0]));
+    qcvm->numbuiltins = numbuiltins;
+
+    //spike: detect extended fields from progs
+#define QCEXTFIELD(n,t) qcvm->extfields.n = ED_FindFieldOffset(#n);
+    QCEXTFIELDS_ALL
+        QCEXTFIELDS_GAME
+        QCEXTFIELDS_CL
+        QCEXTFIELDS_CS
+        QCEXTFIELDS_SS
+#undef QCEXTFIELD
+
+    i = qcvm->progs->entityfields;
+    if (qcvm->extfields.emiteffectnum < 0)
+        qcvm->extfields.emiteffectnum = i++;
+    if (qcvm->extfields.traileffectnum < 0)
+        qcvm->extfields.traileffectnum = i++;
+
+    qcvm->edict_size = i * 4 + sizeof(edict_t) - sizeof(entvars_t);
+    // round off to next highest whole word address (esp for Alpha)
+    // this ensures that pointers in the engine data area are always
+    // properly aligned
+    qcvm->edict_size += sizeof(void*) - 1;
+    qcvm->edict_size &= ~(sizeof(void*) - 1);
+
+    FILE* df = fopen("globaldefs_patch.txt", "w");
+    for (i = 0; i < qcvm->progs->numglobaldefs; i++)
+    {
+        Con_Printf("globaldefs: %s - %d %d\n", qcvm->strings + qcvm->globaldefs[i].s_name, qcvm->globaldefs[i].type, qcvm->globaldefs[i].ofs);
+        fprintf(df, "globaldefs: %s - %d %d\n", qcvm->strings + qcvm->globaldefs[i].s_name, qcvm->globaldefs[i].type, qcvm->globaldefs[i].ofs);
+    }
+    fclose(df);
+
+    FILE* fdf = fopen("fielddefs_patch.txt", "w");
+    for (i = 0; i < qcvm->progs->numfielddefs; i++)
+    {
+        Con_Printf("fielddefs: %s - %d %d\n", qcvm->strings + qcvm->fielddefs[i].s_name, qcvm->fielddefs[i].type, qcvm->fielddefs[i].ofs);
+        fprintf(fdf, "fielddefs: %s - %d %d\n", qcvm->strings + qcvm->fielddefs[i].s_name, qcvm->fielddefs[i].type, qcvm->fielddefs[i].ofs);
+    }
+    fclose(fdf);
+
+    for (i = 0; i < qcvm->progs->numglobals; i++)
+    {
+        //Con_Printf("globals: %s\n", PR_GlobalStringNoContents(i));
+    }
+
+    for (i = 0; i < qcvm->progs->numfunctions; i++)
+    {
+        //Con_Printf("functions: %s - parm_start: %d, locals: %d\n", qcvm->strings + qcvm->functions[i].s_name, qcvm->functions[i].parm_start, qcvm->functions[i].locals);
+    }
+
+    for (i = 0; i < qcvm->progs->numstatements; i++)
+    {
+        //PR_PrintStatement(&qcvm->statements[i]);
+    }
+
+    //PR_SetEngineString("");
+    //PR_EnableExtensions(qcvm->globaldefs);
+
+    //Con_Printf("numglobals: %d\n", qcvm->progs->numglobals);
+    //Con_Printf("numglobaldefs: %d\n", qcvm->progs->numglobaldefs);
+
+    qboolean merge = true;
+    size_t string_ofs = 0;
+    if (merge) {
+        // merge strings
+        char* new_strings = malloc(old_qcvm->progs->numstrings + qcvm->progs->numstrings);
+        memcpy(new_strings, old_qcvm->strings, old_qcvm->progs->numstrings);
+        memcpy(new_strings + old_qcvm->progs->numstrings, qcvm->strings, qcvm->progs->numstrings);
+
+        string_ofs = old_qcvm->progs->numstrings;
+        old_qcvm->progs->numstrings += qcvm->progs->numstrings;
+        old_qcvm->stringssize = old_qcvm->progs->numstrings;
+        old_qcvm->strings = new_strings;
+    }
+
+    size_t global_ofs = 0;
+    ddef_t* last_sys_global_def = NULL;
+    size_t last_sys_global_idx = 0;
+    if (merge) {
+        // merge globals
+        qcvm = old_qcvm;
+        ddef_t* prog_last_sys_global_def = ED_FindGlobal("end_sys_fields");
+        old_qcvm = qcvm;
+        qcvm = &temp_vm;
+
+        last_sys_global_def = ED_FindGlobal("end_sys_fields");
+        last_sys_global_idx = last_sys_global_def->ofs;
+
+        size_t prog_num_sys_globals = prog_last_sys_global_def->ofs + 1;
+        size_t num_sys_globals = last_sys_global_def->ofs + 1;
+        size_t num_old_globals = old_qcvm->progs->numglobals - prog_num_sys_globals;
+        size_t num_new_globals = qcvm->progs->numglobals - num_sys_globals;
+
+        float* new_globals = malloc((prog_num_sys_globals + num_old_globals + num_new_globals) * 4);
+        memcpy(new_globals, old_qcvm->globals, (prog_num_sys_globals + num_old_globals) * 4);
+        memcpy(new_globals + prog_num_sys_globals + num_old_globals, qcvm->globals + num_sys_globals, num_new_globals * 4);
+
+        old_qcvm->globals = new_globals;
+        old_qcvm->progs->numglobals += num_new_globals;
+
+        pr_global_struct = (globalvars_t*)new_globals;
+        global_ofs = num_old_globals + (prog_num_sys_globals - num_sys_globals);
+    }
+
+    size_t statement_ofs = 0;
+    if (merge) {
+        // merge statements
+        for (i = 0; i < qcvm->progs->numstatements; i++)
+        {
+            dstatement_t* st = qcvm->statements + i;
+            if (st->a && st->a > last_sys_global_idx) st->a += global_ofs;
+            if (st->b && st->b > last_sys_global_idx) st->b += global_ofs;
+            if (st->c && st->c > last_sys_global_idx) st->c += global_ofs;
+        }
+        dstatement_t* new_statements = malloc((old_qcvm->progs->numstatements + qcvm->progs->numstatements) * sizeof(dstatement_t));
+        memcpy(new_statements, old_qcvm->statements, old_qcvm->progs->numstatements * sizeof(dstatement_t));
+        memcpy(new_statements+old_qcvm->progs->numstatements, qcvm->statements, qcvm->progs->numstatements * sizeof(dstatement_t));
+
+        statement_ofs = old_qcvm->progs->numstatements;
+
+        old_qcvm->statements = new_statements;
+        old_qcvm->progs->numstatements += qcvm->progs->numstatements;
+    }
+
+    size_t num_ignore_funcs = 0;
+    for (i = 0; i < qcvm->progs->numfunctions; i++)
+    {
+        if (strcmp("patch_begin_defs", PR_GetString(qcvm->functions[i].s_name)))
+        {
+            num_ignore_funcs++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    size_t func_ofs = 0;
+    if (merge) {
+        // merge functions
+        for (i = 0; i < qcvm->progs->numfunctions; i++)
+        {
+            dfunction_t* func = qcvm->functions + i;
+            
+            if (!strcmp("spawnfunc_light", PR_GetString(func->s_name)))
+            {
+                printf("\n");
+            }
+
+            func->s_name += string_ofs;
+            if (func->first_statement > 0) func->first_statement += statement_ofs;
+            if (func->parm_start > 0) func->parm_start += global_ofs;
+        }
+
+        size_t new_funcs_length = (old_qcvm->progs->numfunctions + (qcvm->progs->numfunctions - num_ignore_funcs));
+        dfunction_t* new_funcs = malloc(new_funcs_length * sizeof(dfunction_t));
+        memcpy(new_funcs, old_qcvm->functions, old_qcvm->progs->numfunctions * sizeof(dfunction_t));
+        memcpy(
+            new_funcs + old_qcvm->progs->numfunctions,
+            qcvm->functions + num_ignore_funcs,
+            (qcvm->progs->numfunctions - num_ignore_funcs) * sizeof(dfunction_t)
+        );
+        func_ofs = old_qcvm->progs->numfunctions - num_ignore_funcs;
+
+        old_qcvm->functions = new_funcs;
+        old_qcvm->progs->numfunctions += (qcvm->progs->numfunctions - num_ignore_funcs);
+    }
+
+    if (merge) {
+        // modify defs
+        for (i = 0; i < qcvm->progs->numglobaldefs; i++)
+        {
+            if (qcvm->globaldefs[i].ofs > last_sys_global_idx)
+            {
+                const char* name = old_qcvm->strings + qcvm->globaldefs[i].s_name + string_ofs;
+                int ofs = qcvm->globaldefs[i].ofs + global_ofs;
+
+                if ((qcvm->globaldefs[i].type & 0xFF) == ev_string)
+                {
+                    eval_t* ev = ((eval_t*)&old_qcvm->globals[ofs]);
+                    ev->string += string_ofs;
+                }
+                else if ((qcvm->globaldefs[i].type & 0xFF) == ev_function)
+                {
+                    eval_t* ev = ((eval_t*)&old_qcvm->globals[ofs]);
+                    if (ev->function >= num_ignore_funcs)
+                    {
+                        ev->function += func_ofs;
+                        printf("%s\n");
+                    }
+                }
+            }
+        }
+    }
+
+    old_qcvm->patch_progs = qcvm->progs;
+    qcvm = old_qcvm;
+
+    for (i = 0; i < temp_vm.progs->numglobaldefs; i++)
+    {
+        const char* name = old_qcvm->strings + temp_vm.globaldefs[i].s_name + string_ofs;
+        int ofs = temp_vm.globaldefs[i].ofs + global_ofs;
+
+        // Check for fields/globals/funcs references and auto-fill them
+        if (!Q_strncmp("f_", name, 2))
+        {
+            ddef_t* def = ED_FindField(name + 2);
+            if (!def)
+            {
+                Host_Error("invalid auto field offset: %s\n", name);
+                return;
+            }
+
+            ((int*)(old_qcvm->globals))[ofs] = (int)def;
+        }
+        else if (!Q_strncmp("g_", name, 2))
+        {
+            ddef_t* def = ED_FindGlobal(name + 2);
+            if (!def)
+            {
+                Host_Error("invalid auto global offset: %s\n", name);
+                return;
+            }
+
+            ((int*)(old_qcvm->globals))[ofs] = (int)def;
+        }
+        else if (!Q_strncmp("fn_", name, 3))
+        {
+            dfunction_t* func = ED_FindFunction(name + 3);
+            if (func)
+                ((eval_t*)(old_qcvm->globals + ofs))->function = func - qcvm->functions;
+            else
+                ((eval_t*)(old_qcvm->globals + ofs))->function = -1;
+        }
+    }
+
+    PR_EnablePatchExtensions(last_sys_global_def + 1);
+
+	return true;
+}
 
 /*
 ===============

@@ -1,0 +1,98 @@
+﻿  sv_main.c
+cl : command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+C:\code\Quakespasm\quakespasm\Quake\sv_main.c(52,15): warning C4090: 'function': different 'const' qualifiers
+  pr_ext.c
+C:\code\Quakespasm\quakespasm\Quake\sv_main.c(3316,66): warning C4013: 'PR_GlobalStringNoContents' undefined; assuming extern returning int
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(3672,16): warning C4018: '<': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(5787,22): warning C4018: '<': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(5791,21): warning C4018: '>=': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(5831,22): warning C4018: '<': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(5835,21): warning C4018: '>=': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(6685,15): warning C4018: '<': signed/unsigned mismatch
+  pr_edict.c
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(6734,18): warning C4018: '>=': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1540,32): warning C4018: '>': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1541,32): warning C4018: '>': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1542,32): warning C4018: '>': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1615,38): warning C4018: '>=': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1618,32): warning C4473: 'printf' : not enough arguments passed for format string
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1618,32): message : placeholders and their parameters expect 1 variadic arguments, but 0 were provided
+  gl_texmgr.c
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1618,32): message : the missing variadic argument 1 is required by format string '%s'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(69,31): error C2065: 'GL_RGB565': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(73,32): error C2065: 'GL_RGB9_E5': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(73,67): error C2065: 'GL_UNSIGNED_INT_5_9_9_9_REV': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(77,44): error C2065: 'GL_COMPRESSED_RED_RGTC1': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(78,44): error C2065: 'GL_COMPRESSED_RG_RGTC2': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(79,63): error C2065: 'GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(80,52): error C2065: 'GL_COMPRESSED_RGBA_BPTC_UNORM': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(81,47): error C2065: 'GL_COMPRESSED_RGB8_ETC2': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(82,47): error C2065: 'GL_COMPRESSED_RGB8_ETC2': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(83,69): error C2065: 'GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(84,54): error C2065: 'GL_COMPRESSED_RGBA8_ETC2_EAC': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(85,54): error C2065: 'GL_COMPRESSED_RGBA_ASTC_4x4_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(86,54): error C2065: 'GL_COMPRESSED_RGBA_ASTC_5x4_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(87,54): error C2065: 'GL_COMPRESSED_RGBA_ASTC_5x5_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(88,54): error C2065: 'GL_COMPRESSED_RGBA_ASTC_6x5_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(89,54): error C2065: 'GL_COMPRESSED_RGBA_ASTC_6x6_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(90,54): error C2065: 'GL_COMPRESSED_RGBA_ASTC_8x5_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(91,54): error C2065: 'GL_COMPRESSED_RGBA_ASTC_8x6_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(92,54): error C2065: 'GL_COMPRESSED_RGBA_ASTC_8x8_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(93,56): error C2065: 'GL_COMPRESSED_RGBA_ASTC_10x5_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(94,56): error C2065: 'GL_COMPRESSED_RGBA_ASTC_10x6_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(95,56): error C2065: 'GL_COMPRESSED_RGBA_ASTC_10x8_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(96,58): error C2065: 'GL_COMPRESSED_RGBA_ASTC_10x10_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(97,58): error C2065: 'GL_COMPRESSED_RGBA_ASTC_12x10_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(98,58): error C2065: 'GL_COMPRESSED_RGBA_ASTC_12x12_KHR': undeclared identifier
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(69,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(69,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'void *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(73,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(73,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(77,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(77,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(78,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(78,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(79,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(79,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(80,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(80,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(81,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(81,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(82,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(82,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(83,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(83,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(84,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(84,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(85,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(85,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(86,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(86,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(87,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(87,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(88,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(88,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(89,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(89,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(90,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(90,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(91,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(91,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(92,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(92,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(93,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(93,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(94,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(94,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(95,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(95,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(96,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(96,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(97,1): error C2099: initializer is not a constant
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(97,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(98,1): error C2099: initializer is not a constant
+  Generating Code...
+C:\code\Quakespasm\quakespasm\Quake\gl_texmgr.c(98,1): warning C4047: 'initializing': 'int' differs in levels of indirection from 'qboolean *'
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(3813): warning C4700: uninitialized local variable 'ent' used
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(3869): warning C4700: uninitialized local variable 'ent' used
+C:\code\Quakespasm\quakespasm\Quake\pr_ext.c(3925): warning C4700: uninitialized local variable 'ent' used

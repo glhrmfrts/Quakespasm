@@ -1,0 +1,4 @@
+../start_progs.dat
+
+../src_common/defs.qc
+custom_entity.qc

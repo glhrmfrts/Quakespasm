@@ -68,10 +68,12 @@ void PR_Init (void);
 void PR_ExecuteProgram (func_t fnum);
 void PR_ClearProgs(qcvm_t *vm);
 qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcrc, builtin_t *builtins, size_t numbuiltins);
+qboolean PR_LoadProgsPatch(const char* filename, qboolean fatal, unsigned int needcrc, builtin_t* builtins, size_t numbuiltins);
 
 //from pr_ext.c
 void PR_InitExtensions(void);
 void PR_EnableExtensions(ddef_t *pr_globaldefs);	//adds in the extra builtins etc
+void PR_EnablePatchExtensions(ddef_t* pr_globaldefs); // adds extra builtins for the progs patch
 void PR_AutoCvarChanged(cvar_t *var);				//updates the autocvar_ globals when their cvar is changed
 void PR_ShutdownExtensions(void);					//nooooes!
 void PR_ReloadPics(qboolean purge);					//for gamedir or video changes
@@ -200,6 +202,11 @@ struct pr_extfuncs_s
 	QCEXTFUNC(m_keyup,					"void(float scan, float chr)")										/*obsoleted by Menu_InputEvent, included for dp compat.*/	\
 	QCEXTFUNC(m_consolecommand,			"float(string cmd)")												\
 	QCEXTFUNC(Menu_InputEvent,			"float(float evtype, float scanx, float chary, float devid)")		\
+/*progspatch*/
+#define QCEXTFUNCS_PROGSPATCH \
+    QCEXTFUNC(patch_call0, "__variant(string func)") \
+    QCEXTFUNC(patch_getfield, "__variant(entity e, string field)") \
+    QCEXTFUNC(patch_setfield, "void(entity e, string field, __variant value)") \
 
 #define QCEXTFUNC(n,t) func_t n;
 	QCEXTFUNCS_COMMON
@@ -207,6 +214,7 @@ struct pr_extfuncs_s
 	QCEXTFUNCS_SV
 	QCEXTFUNCS_CS
 	QCEXTFUNCS_MENU
+    QCEXTFUNCS_PROGSPATCH
 #undef QCEXTFUNC
 };
 extern	cvar_t	pr_checkextension;	//if 0, extensions are disabled (unless they'd be fatal, but they're still spammy)
@@ -334,7 +342,7 @@ typedef struct areanode_s
 
 struct qcvm_s
 {
-	dprograms_t	*progs;
+	dprograms_t	*progs;    
 	dfunction_t	*functions;
 	dstatement_t	*statements;
 	float		*globals;	/* same as pr_global_struct */
@@ -397,6 +405,9 @@ struct qcvm_s
 	//originally from world.c
 	areanode_t	areanodes[AREA_NODES];
 	int			numareanodes;
+
+    // (gnemeth) patch stuff
+    dprograms_t* patch_progs;
 };
 extern globalvars_t	*pr_global_struct;
 
@@ -413,6 +424,8 @@ extern builtin_t pr_ssqcbuiltins[];
 extern int pr_ssqcnumbuiltins;
 extern builtin_t pr_csqcbuiltins[];
 extern int pr_csqcnumbuiltins;
+
+void PR_PrintStatement(dstatement_t* s);
 
 #endif	/* _QUAKE_PROGS_H */
 

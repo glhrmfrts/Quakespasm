@@ -6820,6 +6820,120 @@ static void PF_cl_getrenderentity(void)
 	}
 }
 
+// ================ PROGSPATCH stuff
+static void PF_patch_call0(void)
+{
+    const char* func_name = G_STRING(OFS_PARM0);
+    dfunction_t* func = ED_FindFunction(func_name);
+    if (!func)
+    {
+        Host_Error("patch_call0: unknown function '%s'\n", func_name);
+        return;
+    }
+    PR_ExecuteProgram(func - qcvm->functions);
+}
+
+static void PF_patch_foffset(void)
+{
+    const char* field_name = G_STRING(OFS_PARM0);
+    G_INT(OFS_RETURN) = (int)ED_FindField(field_name);
+}
+
+static void PF_patch_goffset(void)
+{
+    const char* name = G_STRING(OFS_PARM0);
+    G_INT(OFS_RETURN) = (int)ED_FindGlobal(name);
+}
+
+static void PF_patch_setfield(void)
+{
+    edict_t* ed = G_EDICT(OFS_PARM0);
+    ddef_t* fdef = (ddef_t*)G_INT(OFS_PARM1);
+    if (!fdef)
+    {
+        Host_Error("patch_setfield: invalid field\n");
+        return;
+    }
+
+    eval_t* field_value = (eval_t*)((int*)&ed->v + fdef->ofs);
+    if ((fdef->type & 0xFF) == ev_vector)
+    {
+        eval_t* arg_value = (eval_t*)(qcvm->globals + OFS_PARM2);
+        memcpy(field_value->vector, arg_value->vector, sizeof(field_value->vector));
+    }
+    else
+    {
+        field_value->_int = G_INT(OFS_PARM2);
+    }
+}
+
+static void PF_patch_getfield(void)
+{
+    edict_t* ed = G_EDICT(OFS_PARM0);
+    ddef_t* fdef = (ddef_t*)G_INT(OFS_PARM1);
+    if (!fdef)
+    {
+        Host_Error("patch_getfield: invalid field\n");
+        return;
+    }
+
+    eval_t* field_value = ((eval_t*)((int*)&ed->v + fdef->ofs));
+    if ((fdef->type & 0xFF) == ev_vector)
+    {
+        G_FLOAT(OFS_RETURN + 0) = field_value->vector[0];
+        G_FLOAT(OFS_RETURN + 1) = field_value->vector[1];
+        G_FLOAT(OFS_RETURN + 2) = field_value->vector[2];
+    }
+    else
+    {
+        G_INT(OFS_RETURN) = field_value->_int;
+    }
+}
+
+static void PF_patch_setglobal(void)
+{
+    ddef_t* gdef = (ddef_t*)G_INT(OFS_PARM0);
+    if (!gdef)
+    {
+        Host_Error("patch_setglobal: invalid field\n");
+        return;
+    }
+
+    eval_t* g_value = (eval_t*)(qcvm->globals + gdef->ofs);
+    if ((gdef->type & 0xFF) == ev_vector)
+    {
+        eval_t* arg_value = (eval_t*)(qcvm->globals + OFS_PARM1);
+        memcpy(g_value->vector, arg_value->vector, sizeof(g_value->vector));
+    }
+    else
+    {
+        g_value->_int = G_INT(OFS_PARM2);
+    }
+}
+
+static void PF_patch_getglobal(void)
+{
+    ddef_t* gdef = (ddef_t*)G_INT(OFS_PARM0);
+    if (!gdef)
+    {
+        Host_Error("patch_getglobal: invalid field\n");
+        return;
+    }
+
+    eval_t* g_value = (eval_t*)(qcvm->globals + gdef->ofs);
+    if ((gdef->type & 0xFF) == ev_vector)
+    {
+        G_FLOAT(OFS_RETURN + 0) = g_value->vector[0];
+        G_FLOAT(OFS_RETURN + 1) = g_value->vector[1];
+        G_FLOAT(OFS_RETURN + 2) = g_value->vector[2];
+    }
+    else
+    {
+        G_INT(OFS_RETURN) = g_value->_int;
+    }
+}
+// ================ end PROGSPATCH stuff
+
 //A quick note on number ranges.
 //0: automatically assigned. more complicated, but no conflicts over numbers, just names...
 //   NOTE: #0 is potentially ambiguous - vanilla will interpret it as instruction 0 (which is normally reserved) rather than a builtin.
@@ -7244,6 +7358,18 @@ static struct
 	{"getbindmaps",		PF_NoSSQC,			PF_cl_getbindmaps,			631,	PF_cl_getbindmaps,631, "vector()", "stub."},
 	{"setbindmaps",		PF_NoSSQC,			PF_cl_setbindmaps,			632,	PF_cl_setbindmaps,632, "float(vector bm)", "stub."},
 	{"digest_hex",		PF_digest_hex,		PF_digest_hex,				639,	PF_digest_hex, 639, "string(string digest, string data, ...)"},
+
+    {"patch_call0",     PF_patch_call0, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(string func)"},
+    {"patch_call1",     PF_patch_call0, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(string func, __variant arg0)" },
+    {"patch_call2",     PF_patch_call0, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(string func, __variant arg0, __variant arg1)" },
+    {"patch_call3",     PF_patch_call0, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(string func, __variant arg0, __variant arg1, __variant arg2)" },
+    {"patch_call4",     PF_patch_call0, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(string func, __variant arg0, __variant arg1, __variant arg2, __variant arg3)" },
+    {"patch_getfield",  PF_patch_getfield, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(entity e, float ofs)" },
+    {"patch_setfield",  PF_patch_setfield, PF_NoCSQC, 0, PF_NoMenu, 0, "void(entity e, float ofs, __variant value)" },
+    {"patch_foffset",   PF_patch_foffset, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(entity e, string name)" },
+    {"patch_getglobal",  PF_patch_getglobal, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(float ofs)" },
+    {"patch_setglobal",  PF_patch_setglobal, PF_NoCSQC, 0, PF_NoMenu, 0, "void(float ofs, __variant value)" },
+    {"patch_goffset",   PF_patch_goffset, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(string name)" },
 };
 
 static const char *extnames[] =
@@ -7337,6 +7463,7 @@ static const char *extnames[] =
 	"KRIMZON_SV_PARSECLIENTCOMMAND",
 	"ZQ_QC_STRINGS",
 
+    "QSSP_PROGSPATCH"
 };
 
 static void PF_checkextension(void)
@@ -7581,6 +7708,40 @@ void PR_InitExtensions(void)
 		else
 			extensionbuiltins[i].number_menuqc = --m;
 	}
+}
+
+void PR_EnablePatchExtensions(ddef_t* pr_globaldefs)
+{
+    unsigned int i, j;
+    unsigned int numautocvars = 0;
+    if (!pr_checkextension.value && qcvm == &sv.qcvm)
+    {
+        Con_DPrintf("not enabling qc extensions\n");
+        return;
+    }
+
+#define QCEXTFUNC(n,t) qcvm->extfuncs.n = PR_FindExtFunction(#n);
+    if (qcvm == &sv.qcvm)
+    {
+        QCEXTFUNCS_PROGSPATCH
+
+        //any #0 functions are remapped to their builtins here, so we don't have to tweak the VM in an obscure potentially-breaking way.
+        for (i = 0; i < (unsigned int)qcvm->progs->numfunctions; i++)
+        {
+            if (qcvm->functions[i].first_statement == 0 && qcvm->functions[i].s_name && !qcvm->functions[i].parm_start && !qcvm->functions[i].locals)
+            {
+                const char* name = PR_GetString(qcvm->functions[i].s_name);
+                for (j = 0; j < sizeof(extensionbuiltins) / sizeof(extensionbuiltins[0]); j++)
+                {
+                    if (!strcmp(extensionbuiltins[j].name, name))
+                    {	//okay, map it
+                        qcvm->functions[i].first_statement = -(extensionbuiltins[j].number);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 //called at map start

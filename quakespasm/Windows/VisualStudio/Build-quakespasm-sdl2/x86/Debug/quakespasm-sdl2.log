@@ -1,0 +1,26 @@
+﻿  pr_edict.c
+cl : command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1565,32): warning C4018: '>': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1566,32): warning C4018: '>': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1567,32): warning C4018: '>': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1640,38): warning C4018: '>=': signed/unsigned mismatch
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1643,32): warning C4473: 'printf' : not enough arguments passed for format string
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1643,32): message : placeholders and their parameters expect 1 variadic arguments, but 0 were provided
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1643,32): message : the missing variadic argument 1 is required by format string '%s'
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1665,23): warning C4033: 'PR_LoadProgsPatch' must return a value
+C:\code\Quakespasm\quakespasm\Quake\pr_edict.c(1676,23): warning C4033: 'PR_LoadProgsPatch' must return a value
+  quakespasm-sdl2.vcxproj -> C:\code\Quakespasm\quakespasm\Windows\VisualStudio\Build-quakespasm-sdl2\x86\Debug\quakespasm-sdl2.exe
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libFLAC-8.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libmad-0.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libmikmod-3.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libmpg123-0.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libogg-0.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libopus-0.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libopusfile-0.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libvorbis-0.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libvorbisfile-3.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libvorbisidec-1.dll
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\codecs\x86\libxmp.dll
+         11 arquivo(s) copiado(s).
+  C:\code\Quakespasm\quakespasm\Windows\VisualStudio\\..\SDL2\lib\SDL2.dll
+          1 arquivo(s) copiado(s).
