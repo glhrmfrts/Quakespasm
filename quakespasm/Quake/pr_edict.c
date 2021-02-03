@@ -1355,7 +1355,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
             return false;
         }
     }
-    if (false && qcvm->progs->crc != needcrc)
+    if (qcvm->progs->crc != needcrc)
     {
         if (fatal)
             Host_Error("%s system vars have been modified, progdefs.h is out of date", filename);
@@ -1513,9 +1513,10 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     //Con_Printf("numglobals: %d\n", qcvm->progs->numglobals);
     //Con_Printf("numglobaldefs: %d\n", qcvm->progs->numglobaldefs);
 
-    qboolean merge = true;
+    const qboolean merge = true;
     size_t string_ofs = 0;
-    if (merge) {
+    if (merge)
+    {
         // merge strings
         char* new_strings = malloc(old_qcvm->progs->numstrings + qcvm->progs->numstrings);
         memcpy(new_strings, old_qcvm->strings, old_qcvm->progs->numstrings);
@@ -1530,7 +1531,8 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     size_t global_ofs = 0;
     ddef_t* last_sys_global_def = NULL;
     size_t last_sys_global_idx = 0;
-    if (merge) {
+    if (merge)
+    {
         // merge globals
         qcvm = old_qcvm;
         ddef_t* prog_last_sys_global_def = ED_FindGlobal("end_sys_fields");
@@ -1557,7 +1559,8 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     }
 
     size_t statement_ofs = 0;
-    if (merge) {
+    if (merge)
+    {
         // merge statements
         for (i = 0; i < qcvm->progs->numstatements; i++)
         {
@@ -1590,7 +1593,8 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     }
 
     size_t func_ofs = 0;
-    if (merge) {
+    if (merge)
+    {
         // merge functions
         for (i = 0; i < qcvm->progs->numfunctions; i++)
         {
@@ -1620,7 +1624,8 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         old_qcvm->progs->numfunctions += (qcvm->progs->numfunctions - num_ignore_funcs);
     }
 
-    if (merge) {
+    if (merge)
+    {
         // modify defs
         for (i = 0; i < qcvm->progs->numglobaldefs; i++)
         {

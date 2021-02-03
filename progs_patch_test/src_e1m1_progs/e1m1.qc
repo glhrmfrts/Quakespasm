@@ -1,5 +1,7 @@
 float f_use, f_touch, f_classname, f_origin;
 
+float g_activator;
+
 void() fn_monster_shalrath = {};
 void() fn_monster_wizard = {};
 void() fn_func_door = {};
@@ -24,7 +26,7 @@ void() spawnfunc_monster_army =
 void() custom_use_door =
 {
     bprint(patch_getfield(self, f_classname));
-    centerprint(find(world, classname, "player"), "NICE\n");
+    centerprint(patch_getglobal(g_activator), "NICE\n");
 };
 
 void() spawnfunc_func_door =
@@ -32,5 +34,4 @@ void() spawnfunc_func_door =
     fn_func_door();
 
     patch_setfield(self, f_use, custom_use_door);
-    patch_setfield(self, f_touch, custom_use_door);
 };

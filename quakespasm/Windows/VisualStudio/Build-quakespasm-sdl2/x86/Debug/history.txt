@@ -14,3 +14,9 @@ impulse 9
 map e1m1
 impulse 9
 map e1m1
+god
+map e1m1
+god
+map e1m1
+`god
+god
