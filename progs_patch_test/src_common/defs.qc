@@ -363,17 +363,24 @@ void()		SetChangeParms= {};						// only for testing			// call to set parms for 
 void() patch_begin_defs;
 void() patch_begin_defs = {};
 
+#define TRUE 1
+#define FALSE 0
+
+#define patch_global float
+#define patch_field float
+#define patch_func
+
 __variant(string func)														patch_call0    = #0;
 __variant(string func, __variant arg0)										patch_call1    = #0;
 __variant(string func, __variant arg0, __variant arg1)						patch_call2    = #0;
 __variant(string func, __variant arg0, __variant arg1, __variant arg2)		patch_call3    = #0;
 
-__variant(entity e, float ofs) 						patch_getfield = #0;
-void(entity e, float ofs, __variant value) 	        patch_setfield = #0;
-float(string field)									patch_foffset   = #0;
+__variant(entity e, patch_field ofs) 						patch_getfield = #0;
+void(entity e, patch_field ofs, __variant value) 	        patch_setfield = #0;
+float(string field_name)									patch_foffset   = #0;
 
-__variant(float ofs)	           					patch_getglobal = #0;
-void(float ofs, __variant value)					patch_setglobal = #0;
+__variant(patch_global ofs)	           					patch_getglobal = #0;
+void(patch_global ofs, __variant value)					patch_setglobal = #0;
 float(string name)									patch_goffset    = #0;
 
 void() patch_end_defs;
