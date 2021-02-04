@@ -1297,6 +1297,7 @@ qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcr
 		qcvm->fielddefs[i].s_name = LittleLong (qcvm->fielddefs[i].s_name);
 	}
 
+#if 0
     FILE* fdf = fopen("fielddefs_progs.txt", "w");
     for (i = 0; i < qcvm->progs->numfielddefs; i++)
     {
@@ -1304,6 +1305,7 @@ qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcr
         fprintf(fdf, "fielddefs: %s - %d %d\n", qcvm->strings + qcvm->fielddefs[i].s_name, qcvm->fielddefs[i].type, qcvm->fielddefs[i].ofs);
     }
     fclose(fdf);
+#endif
 
 	for (i = 0; i < qcvm->progs->numglobals; i++)
 		((int *)qcvm->globals)[i] = LittleLong (((int *)qcvm->globals)[i]);
@@ -1339,6 +1341,24 @@ qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcr
 	return true;
 }
 
+static void PR_LookForProgsCallback(void* ctx, const char* fname, time_t mtime, size_t fsize, searchpath_t* path)
+{
+    if (qcvm->num_patch_progs < MAX_PATCH_PROGS)
+    {
+        Con_DPrintf("Found progs patch: %s\n", fname);
+        PR_LoadProgsPatch(fname, true, PROGHEADER_CRC, pr_ssqcbuiltins, pr_ssqcnumbuiltins);
+    }
+}
+
+void PR_LookForProgsPatches(const char* server)
+{
+    COM_ListAllFiles(NULL, "progspatch/*.dat", PR_LookForProgsCallback, 0, NULL);
+
+    char prog_patch_name[_MAX_PATH];
+    q_snprintf(prog_patch_name, sizeof(prog_patch_name), "maps/%s_progs.dat", server);
+    PR_LoadProgsPatch(prog_patch_name, true, PROGHEADER_CRC, pr_ssqcbuiltins, pr_ssqcnumbuiltins);
+}
+
 qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int needcrc, builtin_t* builtins, size_t numbuiltins)
 {
     int			i;
@@ -1348,8 +1368,6 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     qcvm_t* old_qcvm = qcvm;
 
     qcvm = &temp_vm;
-
-    PR_ClearProgs(qcvm);
 
 	temp_vm.progs = (dprograms_t *)COM_LoadMallocFile(filename, NULL);
     if (!temp_vm.progs) {
@@ -1431,7 +1449,6 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     qcvm->statements = (dstatement_t*)((byte*)qcvm->progs + qcvm->progs->ofs_statements);
 
     qcvm->globals = (float*)((byte*)qcvm->progs + qcvm->progs->ofs_globals);
-    //pr_global_struct = (globalvars_t*)qcvm->globals;
 
     qcvm->stringssize = qcvm->progs->numstrings;
 
@@ -1488,6 +1505,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         QCEXTFIELDS_SS
 #undef QCEXTFIELD
 
+        /*
     FILE* df = fopen("globaldefs_patch.txt", "w");
     for (i = 0; i < qcvm->progs->numglobaldefs; i++)
     {
@@ -1503,6 +1521,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         fprintf(fdf, "fielddefs: %s - %d %d\n", qcvm->strings + qcvm->fielddefs[i].s_name, qcvm->fielddefs[i].type, qcvm->fielddefs[i].ofs);
     }
     fclose(fdf);
+    */
 
     for (i = 0; i < qcvm->progs->numglobals; i++)
     {
@@ -1518,12 +1537,6 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     {
         //PR_PrintStatement(&qcvm->statements[i]);
     }
-
-    //PR_SetEngineString("");
-    //PR_EnableExtensions(qcvm->globaldefs);
-
-    //Con_Printf("numglobals: %d\n", qcvm->progs->numglobals);
-    //Con_Printf("numglobaldefs: %d\n", qcvm->progs->numglobaldefs);
 
     const qboolean merge = true;
     size_t string_ofs = 0;
@@ -1635,21 +1648,23 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     size_t num_new_fielddefs = 0;
     size_t num_sys_fielddefs = 1;
     const size_t num_sys_fields = sizeof(entvars_t) / 4;
+    const int last_sys_field_idx = ED_FindFieldOffset("noise3");
     if (merge)
     {
         // merge field defs
         for (i = 0; i < qcvm->progs->numfielddefs; i++)
         {
-            qcvm->fielddefs[i].s_name += string_ofs;
-            const char* fname = old_qcvm->strings + qcvm->fielddefs[i].s_name;
-            if (strcmp("noise3", fname))
-                num_sys_fielddefs++;
+            if (qcvm->fielddefs[i].ofs > last_sys_field_idx)
+            {
+                qcvm->fielddefs[i].s_name += string_ofs;
+                num_new_fielddefs++;
+            }
             else
-                break;
+            {
+                num_sys_fielddefs++;
+            }
         }
         const size_t item_size = sizeof(ddef_t);
-        
-        num_new_fielddefs = qcvm->progs->numfielddefs - num_sys_fielddefs;
 
         size_t new_fdefs_length = (old_qcvm->progs->numfielddefs + qcvm->progs->numfielddefs - num_sys_fielddefs);
         ddef_t* new_fdefs = malloc(new_fdefs_length * item_size);
@@ -1663,27 +1678,29 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         old_qcvm->progs->numfielddefs += num_new_fielddefs;
     }
 
-    if (false && merge)
+    if (merge)
     {
         // merge global defs
-        size_t num_sys_gdefs = 1;
+        size_t num_sys_gdefs = 0;
+        size_t num_new_gdefs = 0;
 
-        for (i = 0; i < qcvm->progs->numfielddefs; i++)
+        for (i = 0; i < qcvm->progs->numglobaldefs; i++)
         {
-            qcvm->globaldefs[i].s_name += string_ofs;
-            qcvm->globaldefs[i].ofs += global_ofs;
-
-            const char* name = old_qcvm->strings + qcvm->fielddefs[i].s_name;
-            if (strcmp("end_sys_fields", name))
-                num_sys_gdefs++;
+            if (qcvm->globaldefs[i].ofs > last_sys_global_idx)
+            {
+                qcvm->globaldefs[i].s_name += string_ofs;
+                qcvm->globaldefs[i].ofs += global_ofs;
+                num_new_gdefs++;
+            }
             else
-                break;
+            {
+                num_sys_gdefs++;
+            }
         }
+        
         const size_t item_size = sizeof(ddef_t);
 
-        size_t num_new_gdefs = qcvm->progs->numglobaldefs - num_sys_gdefs;
-
-        size_t new_gdefs_length = (old_qcvm->progs->numglobaldefs + qcvm->progs->numglobaldefs - num_sys_gdefs);
+        size_t new_gdefs_length = (old_qcvm->progs->numglobaldefs + num_new_gdefs);
         ddef_t* new_gdefs = malloc(new_gdefs_length * item_size);
         memcpy(new_gdefs, old_qcvm->globaldefs, old_qcvm->progs->numglobaldefs * item_size);
         memcpy(new_gdefs + old_qcvm->progs->numglobaldefs, qcvm->globaldefs + num_sys_gdefs, num_new_gdefs * item_size);
@@ -1700,8 +1717,8 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         {
             if (qcvm->globaldefs[i].ofs > last_sys_global_idx)
             {
-                const char* name = old_qcvm->strings + qcvm->globaldefs[i].s_name + string_ofs;
-                int ofs = qcvm->globaldefs[i].ofs + global_ofs;
+                const char* name = old_qcvm->strings + qcvm->globaldefs[i].s_name;
+                int ofs = qcvm->globaldefs[i].ofs;
 
                 if ((qcvm->globaldefs[i].type & 0xFF) == ev_string)
                 {
@@ -1714,7 +1731,6 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
                     if (ev->function >= num_ignore_funcs)
                     {
                         ev->function += func_ofs;
-                        printf("%s\n");
                     }
                 }
                 else if ((qcvm->globaldefs[i].type & 0xFF) == ev_field)
@@ -1730,14 +1746,20 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     }
 
     qcvm->edict_size = old_qcvm->edict_size + (qcvm->progs->entityfields - num_sys_fields) * 4;
+    
+    old_qcvm->progs->entityfields += qcvm->progs->entityfields - num_sys_fields;
 
-    old_qcvm->patch_progs = qcvm->progs;
+    // keep track of the patch progs
+    memcpy(old_qcvm->patch_progs[old_qcvm->num_patch_progs].filename, filename, strlen(filename));
+    old_qcvm->patch_progs[old_qcvm->num_patch_progs].progs = qcvm->progs;
+    old_qcvm->num_patch_progs++;
+
     qcvm = old_qcvm;
 
     for (i = 0; i < temp_vm.progs->numglobaldefs; i++)
     {
-        const char* name = old_qcvm->strings + temp_vm.globaldefs[i].s_name + string_ofs;
-        int ofs = temp_vm.globaldefs[i].ofs + global_ofs;
+        const char* name = old_qcvm->strings + temp_vm.globaldefs[i].s_name;
+        int ofs = temp_vm.globaldefs[i].ofs;
 
         // Check for fields/globals/funcs references and auto-fill them
         if (!Q_strncmp("f_", name, 2))
@@ -1766,7 +1788,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         {
             dfunction_t* func = ED_FindFunction(name + 3);
             if (func)
-                ((eval_t*)(old_qcvm->globals + ofs))->function = func - qcvm->functions;
+                ((eval_t*)(old_qcvm->globals + ofs))->function = func - old_qcvm->functions;
             else
                 ((eval_t*)(old_qcvm->globals + ofs))->function = -1;
         }

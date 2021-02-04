@@ -3301,25 +3301,7 @@ void SV_SpawnServer (const char *server)
 	PR_SwitchQCVM(vm);
 // load progs to get entity field count
 	PR_LoadProgs ("progs.dat", true, PROGHEADER_CRC, pr_ssqcbuiltins, pr_ssqcnumbuiltins);
-
-    {
-        char prog_patch_name[_MAX_PATH];
-        q_snprintf(prog_patch_name, sizeof(prog_patch_name), "maps/%s_progs.dat", server);
-        PR_LoadProgsPatch(prog_patch_name, true, PROGHEADER_CRC, pr_ssqcbuiltins, pr_ssqcnumbuiltins);
-
-        for (int i = 0; i < qcvm->progs->numfunctions; i++)
-        {
-            //Con_Printf("functions: %s - first: %d, parm_start: %d, locals: %d\n", qcvm->strings + qcvm->functions[i].s_name, qcvm->functions[i].first_statement, qcvm->functions[i].parm_start, qcvm->functions[i].locals);
-        }
-
-        FILE* df = fopen("globaldefs_progs.txt", "w");
-        for (int i = 0; i < qcvm->progs->numglobaldefs; i++)
-        {
-            //Con_Printf("globaldefs: %s - %d %d\n", qcvm->strings + qcvm->globaldefs[i].s_name, qcvm->globaldefs[i].type, qcvm->globaldefs[i].ofs);
-            fprintf(df, "globaldefs: %s - %d %d\n", qcvm->strings + qcvm->globaldefs[i].s_name, qcvm->globaldefs[i].type, qcvm->globaldefs[i].ofs);
-        }
-        fclose(df);
-    }
+    PR_LookForProgsPatches(server);
 
 // allocate server memory
 	/* Host_ClearMemory() called above already cleared the whole sv structure */

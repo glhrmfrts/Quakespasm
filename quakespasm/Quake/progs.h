@@ -68,12 +68,15 @@ void PR_Init (void);
 void PR_ExecuteProgram (func_t fnum);
 void PR_ClearProgs(qcvm_t *vm);
 qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcrc, builtin_t *builtins, size_t numbuiltins);
+
+// gnemeth - progs patch functions
+void PR_LookForProgsPatches(const char* server);
 qboolean PR_LoadProgsPatch(const char* filename, qboolean fatal, unsigned int needcrc, builtin_t* builtins, size_t numbuiltins);
 
 //from pr_ext.c
 void PR_InitExtensions(void);
 void PR_EnableExtensions(ddef_t *pr_globaldefs);	//adds in the extra builtins etc
-void PR_EnablePatchExtensions(ddef_t* pr_globaldefs); // adds extra builtins for the progs patch
+void PR_EnablePatchExtensions(ddef_t* pr_globaldefs); // gnemeth - adds extra builtins for the progs patch
 void PR_AutoCvarChanged(cvar_t *var);				//updates the autocvar_ globals when their cvar is changed
 void PR_ShutdownExtensions(void);					//nooooes!
 void PR_ReloadPics(qboolean purge);					//for gamedir or video changes
@@ -340,6 +343,14 @@ typedef struct areanode_s
 #define CSIE_JOYAXIS			6
 //#define CSIE_GYROSCOPE		7
 
+#define MAX_PATCH_PROGS 32
+
+struct patch_progs_s
+{
+	char filename[_MAX_PATH];
+	dprograms_t* progs;
+};
+
 struct qcvm_s
 {
 	dprograms_t	*progs;    
@@ -406,8 +417,9 @@ struct qcvm_s
 	areanode_t	areanodes[AREA_NODES];
 	int			numareanodes;
 
-    // (gnemeth) patch stuff
-    dprograms_t* patch_progs;
+    // gnemeth - patch stuff
+    int num_patch_progs;
+    struct patch_progs_s patch_progs[MAX_PATCH_PROGS];
 };
 extern globalvars_t	*pr_global_struct;
 
