@@ -326,6 +326,26 @@ static int PR_LeaveFunction (void)
 	return qcvm->stack[qcvm->depth].s;
 }
 
+static void PR_UpdatePatchGlobals()
+{
+    for (int i = 0; i < qcvm->num_patch_globals; i++)
+    {
+        etype_t t = qcvm->patch_globals[i].type;
+        int from_ofs = qcvm->patch_globals[i].from_ofs;
+        int to_ofs = qcvm->patch_globals[i].to_ofs;
+
+        eval_t* from_val = (eval_t*)(qcvm->globals + from_ofs);
+        eval_t* to_val = (eval_t*)(qcvm->globals + to_ofs);
+        if ((t & 0xFF) == ev_vector)
+        {
+            memcpy(to_val, from_val, sizeof(to_val->vector));
+        }
+        else
+        {
+            to_val->_int = from_val->_int;
+        }
+    }
+}
 
 /*
 ====================
@@ -378,6 +398,8 @@ void PR_ExecuteProgram (func_t fnum)
 
 	if (qcvm->trace)
 		PR_PrintStatement(st);
+
+    PR_UpdatePatchGlobals();
 
 	switch (st->op)
 	{

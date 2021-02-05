@@ -344,11 +344,19 @@ typedef struct areanode_s
 //#define CSIE_GYROSCOPE		7
 
 #define MAX_PATCH_PROGS 32
+#define MAX_PATCH_GLOBALS 255
 
 struct patch_progs_s
 {
 	char filename[_MAX_PATH];
 	dprograms_t* progs;
+};
+
+struct patch_global_s
+{
+    etype_t type;
+    int from_ofs;
+    int to_ofs;
 };
 
 struct qcvm_s
@@ -420,6 +428,10 @@ struct qcvm_s
     // gnemeth - patch stuff
     int num_patch_progs;
     struct patch_progs_s patch_progs[MAX_PATCH_PROGS];
+
+    // gnemeth - temporary hopefeully
+    int num_patch_globals;
+    struct patch_global_s patch_globals[MAX_PATCH_GLOBALS];
 };
 extern globalvars_t	*pr_global_struct;
 

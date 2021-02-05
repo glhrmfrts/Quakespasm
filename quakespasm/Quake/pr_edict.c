@@ -1297,7 +1297,15 @@ qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcr
 		qcvm->fielddefs[i].s_name = LittleLong (qcvm->fielddefs[i].s_name);
 	}
 
-#if 0
+#if 1
+    FILE* gdf = fopen("globaldefs_progs.txt", "w");
+    for (i = 0; i < qcvm->progs->numglobaldefs; i++)
+    {
+        Con_Printf("globaldefs: %s - %d %d\n", qcvm->strings + qcvm->globaldefs[i].s_name, qcvm->globaldefs[i].type, qcvm->globaldefs[i].ofs);
+        fprintf(gdf, "globaldefs: %s - %d %d\n", qcvm->strings + qcvm->globaldefs[i].s_name, qcvm->globaldefs[i].type, qcvm->globaldefs[i].ofs);
+    }
+    fclose(gdf);
+
     FILE* fdf = fopen("fielddefs_progs.txt", "w");
     for (i = 0; i < qcvm->progs->numfielddefs; i++)
     {
@@ -1337,6 +1345,8 @@ qboolean PR_LoadProgs (const char *filename, qboolean fatal, unsigned int needcr
 
 	PR_SetEngineString("");
 	PR_EnableExtensions(qcvm->globaldefs);
+
+    qcvm->num_patch_progs = 0;
 
 	return true;
 }
@@ -1505,7 +1515,6 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         QCEXTFIELDS_SS
 #undef QCEXTFIELD
 
-        /*
     FILE* df = fopen("globaldefs_patch.txt", "w");
     for (i = 0; i < qcvm->progs->numglobaldefs; i++)
     {
@@ -1521,7 +1530,6 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         fprintf(fdf, "fielddefs: %s - %d %d\n", qcvm->strings + qcvm->fielddefs[i].s_name, qcvm->fielddefs[i].type, qcvm->fielddefs[i].ofs);
     }
     fclose(fdf);
-    */
 
     for (i = 0; i < qcvm->progs->numglobals; i++)
     {
@@ -1538,6 +1546,9 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         //PR_PrintStatement(&qcvm->statements[i]);
     }
 
+    size_t old_global_defs = old_qcvm->progs->numglobaldefs;
+    size_t old_field_defs = old_qcvm->progs->numfielddefs;
+
     const qboolean merge = true;
     size_t string_ofs = 0;
     if (merge)
@@ -1551,7 +1562,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         old_qcvm->progs->numstrings += qcvm->progs->numstrings;
         old_qcvm->stringssize = old_qcvm->progs->numstrings;
 
-        if (old_qcvm->patch_progs) free(old_qcvm->strings);
+        if (old_qcvm->num_patch_progs) free(old_qcvm->strings);
         old_qcvm->strings = new_strings;
     }
 
@@ -1578,7 +1589,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         memcpy(new_globals, old_qcvm->globals, (prog_num_sys_globals + num_old_globals) * 4);
         memcpy(new_globals + prog_num_sys_globals + num_old_globals, qcvm->globals + num_sys_globals, num_new_globals * 4);
 
-        if (old_qcvm->patch_progs) free(old_qcvm->globals);
+        if (old_qcvm->num_patch_progs) free(old_qcvm->globals);
         old_qcvm->globals = new_globals;
         old_qcvm->progs->numglobals += num_new_globals;
 
@@ -1603,7 +1614,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
 
         statement_ofs = old_qcvm->progs->numstatements;
 
-        if (old_qcvm->patch_progs) free(old_qcvm->statements);
+        if (old_qcvm->num_patch_progs) free(old_qcvm->statements);
         old_qcvm->statements = new_statements;
         old_qcvm->progs->numstatements += qcvm->progs->numstatements;
     }
@@ -1639,7 +1650,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         );
         func_ofs = old_qcvm->progs->numfunctions - num_ignore_funcs;
 
-        if (old_qcvm->patch_progs) free(old_qcvm->functions);
+        if (old_qcvm->num_patch_progs) free(old_qcvm->functions);
         old_qcvm->functions = new_funcs;
         old_qcvm->progs->numfunctions += (qcvm->progs->numfunctions - num_ignore_funcs);
     }
@@ -1647,6 +1658,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     size_t field_ofs = 0;
     size_t num_new_fielddefs = 0;
     size_t num_sys_fielddefs = 1;
+    size_t num_patch_fdefs = 0;
     const size_t num_sys_fields = sizeof(entvars_t) / 4;
     const int last_sys_field_idx = ED_FindFieldOffset("noise3");
     if (merge)
@@ -1658,6 +1670,13 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
             {
                 qcvm->fielddefs[i].s_name += string_ofs;
                 num_new_fielddefs++;
+
+                const char* name = old_qcvm->strings + temp_vm.fielddefs[i].s_name;
+                int ofs = temp_vm.fielddefs[i].ofs;
+                if (!Q_strncmp("p_", name, 2))
+                {
+                    num_patch_fdefs++;
+                }
             }
             else
             {
@@ -1673,7 +1692,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
 
         field_ofs = old_qcvm->progs->numfielddefs - num_sys_fielddefs;
 
-        if (old_qcvm->patch_progs) free(old_qcvm->fielddefs);
+        //if (old_qcvm->num_patch_progs) free(old_qcvm->fielddefs);
         old_qcvm->fielddefs = new_fdefs;
         old_qcvm->progs->numfielddefs += num_new_fielddefs;
     }
@@ -1705,7 +1724,7 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         memcpy(new_gdefs, old_qcvm->globaldefs, old_qcvm->progs->numglobaldefs * item_size);
         memcpy(new_gdefs + old_qcvm->progs->numglobaldefs, qcvm->globaldefs + num_sys_gdefs, num_new_gdefs * item_size);
 
-        if (old_qcvm->patch_progs) free(old_qcvm->globaldefs);
+        if (old_qcvm->num_patch_progs) free(old_qcvm->globaldefs);
         old_qcvm->globaldefs = new_gdefs;
         old_qcvm->progs->numglobaldefs += num_new_gdefs;
     }
@@ -1745,9 +1764,10 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
         }
     }
 
-    qcvm->edict_size = old_qcvm->edict_size + (qcvm->progs->entityfields - num_sys_fields) * 4;
+    size_t num_actual_new_fields = qcvm->progs->entityfields - num_sys_fields - num_patch_fdefs;
+    qcvm->edict_size = old_qcvm->edict_size + (num_actual_new_fields) * 4;
     
-    old_qcvm->progs->entityfields += qcvm->progs->entityfields - num_sys_fields;
+    old_qcvm->progs->entityfields += num_actual_new_fields;
 
     // keep track of the patch progs
     memcpy(old_qcvm->patch_progs[old_qcvm->num_patch_progs].filename, filename, strlen(filename));
@@ -1760,33 +1780,53 @@ qboolean PR_LoadProgsPatch (const char* filename, qboolean fatal, unsigned int n
     {
         const char* name = old_qcvm->strings + temp_vm.globaldefs[i].s_name;
         int ofs = temp_vm.globaldefs[i].ofs;
+        etype_t type = temp_vm.globaldefs[i].type & 0xFF;
 
         // Check for fields/globals/funcs references and auto-fill them
-        if (!Q_strncmp("f_", name, 2))
+        if (!Q_strncmp("op_", name, 3) || !Q_strncmp("p_", name, 2))
         {
-            ddef_t* def = ED_FindField(name + 2);
-            if (!def)
+            qboolean opt = name[0] == 'o';
+            if (type == ev_field)
             {
-                Host_Error("invalid auto field offset: %s\n", name);
-                return;
-            }
+                int actual_ofs = ED_FindFieldOffset(opt ? (name + 3) : (name + 2));
 
-            ((int*)(old_qcvm->globals))[ofs] = (int)def;
-        }
-        else if (!Q_strncmp("g_", name, 2))
-        {
-            ddef_t* def = ED_FindGlobal(name + 2);
-            if (!def)
+                if (actual_ofs == -1 && !opt)
+                {
+                    Host_Error("could not find patch field: %s\n", name);
+                    return;
+                }
+
+                ((int*)(old_qcvm->globals))[ofs] = actual_ofs;
+            }
+            else
             {
-                Host_Error("invalid auto global offset: %s\n", name);
-                return;
-            }
+                ddef_t* def = ED_FindGlobal(name + 2);
+                if (!def && !opt)
+                {
+                    Host_Error("could not find patch global: %s\n", name);
+                    return;
+                }
 
-            ((int*)(old_qcvm->globals))[ofs] = (int)def;
+                if (def)
+                {
+                    old_qcvm->patch_globals[old_qcvm->num_patch_globals].from_ofs = def->ofs;
+                    old_qcvm->patch_globals[old_qcvm->num_patch_globals].to_ofs = ofs;
+                    old_qcvm->patch_globals[old_qcvm->num_patch_globals].type = def->type;
+                    old_qcvm->num_patch_globals++;
+                }
+            }
         }
-        else if (!Q_strncmp("fn_", name, 3))
+        else if (!Q_strncmp("pfn_", name, 4))
         {
-            dfunction_t* func = ED_FindFunction(name + 3);
+            dfunction_t* func = ED_FindFunction(name + 4);
+            if (func)
+                ((eval_t*)(old_qcvm->globals + ofs))->function = func - old_qcvm->functions;
+            else
+                Host_Error("could not find patch function: %s\n", name);
+        }
+        else if (!Q_strncmp("opfn_", name, 5))
+        {
+            dfunction_t* func = ED_FindFunction(name + 5);
             if (func)
                 ((eval_t*)(old_qcvm->globals + ofs))->function = func - old_qcvm->functions;
             else

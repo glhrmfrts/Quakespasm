@@ -1,0 +1,4 @@
+../monster_sentinel.dat
+
+../src_common/defs.qc
+monster_sentinel.qc

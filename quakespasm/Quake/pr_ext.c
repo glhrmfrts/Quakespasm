@@ -6932,6 +6932,21 @@ static void PF_patch_getglobal(void)
         G_INT(OFS_RETURN) = g_value->_int;
     }
 }
+
+static void PF_patch_checkfunction(void)
+{
+    G_INT(OFS_RETURN) = G_INT(OFS_PARM0) != -1;
+}
+
+static void PF_patch_checkfield(void)
+{
+    G_INT(OFS_RETURN) = G_INT(OFS_PARM0) != -1;
+}
+
+static void PF_patch_checkglobal(void)
+{
+    G_INT(OFS_RETURN) = ED_FindGlobal(G_STRING(OFS_PARM0)) != NULL;
+}
 // ================ end PROGSPATCH stuff
 
 //A quick note on number ranges.
@@ -7370,6 +7385,9 @@ static struct
     {"patch_getglobal",  PF_patch_getglobal, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(float ofs)" },
     {"patch_setglobal",  PF_patch_setglobal, PF_NoCSQC, 0, PF_NoMenu, 0, "void(float ofs, __variant value)" },
     {"patch_goffset",   PF_patch_goffset, PF_NoCSQC, 0, PF_NoMenu, 0, "__variant(string name)" },
+    {"patch_checkfunction",   PF_patch_checkfunction, PF_NoCSQC, 0, PF_NoMenu, 0, "float(__variant f)" },
+    {"patch_checkfield",   PF_patch_checkfield, PF_NoCSQC, 0, PF_NoMenu, 0, "float(__variant f)" },
+    {"patch_checkglobal",   PF_patch_checkglobal, PF_NoCSQC, 0, PF_NoMenu, 0, "float(string name)" },
 };
 
 static const char *extnames[] =
